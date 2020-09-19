@@ -27,6 +27,10 @@ if [[ ! -e $pkgname/PKGBUILD ]]; then
     exit 1
 fi
 
+sudo bash -c 'echo "
+[multilib]
+Include = /etc/pacman.d/mirrorlist" >> /etc/pacman.conf'
+
 pkgbuild_dir=$(readlink "$pkgname" -f) # nicely cleans up path, ie. ///dsq/dqsdsq/my-package//// -> /dsq/dqsdsq/my-package
 
 getfacl -p -R "$pkgbuild_dir" /github/home > /tmp/arch-pkgbuild-builder-permissions.bak
@@ -41,6 +45,7 @@ sudo chown -R build /github/home
 # use more reliable keyserver
 mkdir -p /github/home/.gnupg/
 echo "keyserver hkp://keyserver.ubuntu.com:80" | tee /github/home/.gnupg/gpg.conf
+sudo pacman -Syu
 
 cd "$pkgbuild_dir"
 
