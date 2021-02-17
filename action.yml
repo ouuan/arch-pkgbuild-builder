@@ -16,7 +16,7 @@ inputs:
       Validation target.
       Can be one of: "pkgbuild", "srcinfo", "run"
     required: true
-    default: 'pkgbuild'
+    default: "pkgbuild"
   command:
     description: >-
       Command to run after package installation.
@@ -25,6 +25,10 @@ inputs:
   debug:
     description: Turns debugging on
     required: false
+
+outputs:
+  pkgpath:
+    description: The path to the package. Only available when target is pkgbuild.
 
 runs:
   using: docker

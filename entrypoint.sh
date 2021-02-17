@@ -5,7 +5,7 @@ set -e
 
 DEBUG=$4
 
-if [[ -n $DEBUG  && $DEBUG = true ]]; then
+if [[ -n $DEBUG && $DEBUG = true ]]; then
     set -x
 fi
 
@@ -33,7 +33,7 @@ Include = /etc/pacman.d/mirrorlist" >> /etc/pacman.conf'
 
 pkgbuild_dir=$(readlink "$pkgname" -f) # nicely cleans up path, ie. ///dsq/dqsdsq/my-package//// -> /dsq/dqsdsq/my-package
 
-getfacl -p -R "$pkgbuild_dir" /github/home > /tmp/arch-pkgbuild-builder-permissions.bak
+getfacl -p -R "$pkgbuild_dir" /github/home >/tmp/arch-pkgbuild-builder-permissions.bak
 
 # '/github/workspace' is mounted as a volume and has owner set to root
 # set the owner of $pkgbuild_dir  to the 'build' user, so it can access package files.
@@ -53,36 +53,46 @@ pkgname="$(basename "$pkgbuild_dir")" # keep quotes in case someone passes in a 
 
 install_deps() {
     # install make and regular package dependencies
-    grep -E 'depends|makedepends' PKGBUILD | \
-        sed -e 's/.*depends=//' -e 's/ /\n/g' | \
-        tr -d "'" | tr -d "(" | tr -d ")" | \
+    grep -E 'depends|makedepends' PKGBUILD |
+        sed -e 's/.*depends=//' -e 's/ /\n/g' |
+        tr -d "'" | tr -d "(" | tr -d ")" |
         xargs yay -S --noconfirm
 }
 
 case $target in
-    pkgbuild)
-        namcap PKGBUILD
-        install_deps
-        makepkg --syncdeps --noconfirm
-        namcap "${pkgname}"-*
+pkgbuild)
+    namcap PKGBUILD
+    install_deps
+    makepkg --syncdeps --noconfirm
 
-        # shellcheck disable=SC1091
-        source /etc/makepkg.conf # get PKGEXT
+    # shellcheck disable=SC1091
+    source PKGBUILD # get pkgver and pkgrel
+    # shellcheck disable=SC1091
+    source /etc/makepkg.conf # get PKGEXT
 
-        pacman -Qip "${pkgname}"-*"${PKGEXT}"
-        pacman -Qlp "${pkgname}"-*"${PKGEXT}"
-        ;;
-    run)
-        install_deps
-        makepkg --syncdeps --noconfirm --install
-        eval "$command"
-        ;;
-    srcinfo)
-        makepkg --printsrcinfo | diff .SRCINFO - || \
-            { echo ".SRCINFO is out of sync. Please run 'makepkg --printsrcinfo' and commit the changes."; false; }
-        ;;
-    *)
-      echo "Target should be one of 'pkgbuild', 'srcinfo', 'run'" ;;
+    paths=("${pkgname}-${pkgver}-${pkgrel}-"*"${PKGEXT}")
+    pkgpath="${paths[0]}"
+    echo "::set-output name=pkgpath::${pkgpath}"
+
+    namcap "${pkgpath}"
+    pacman -Qip "${pkgpath}"
+    pacman -Qlp "${pkgpath}"
+    ;;
+run)
+    install_deps
+    makepkg --syncdeps --noconfirm --install
+    eval "$command"
+    ;;
+srcinfo)
+    makepkg --printsrcinfo | diff .SRCINFO - ||
+        {
+            echo ".SRCINFO is out of sync. Please run 'makepkg --printsrcinfo' and commit the changes."
+            false
+        }
+    ;;
+*)
+    echo "Target should be one of 'pkgbuild', 'srcinfo', 'run'"
+    ;;
 esac
 
 sudo setfacl --restore=/tmp/arch-pkgbuild-builder-permissions.bak
