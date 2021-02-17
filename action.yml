@@ -28,7 +28,8 @@ inputs:
 
 outputs:
   pkgpath:
-    description: The path to the package. Only available when target is pkgbuild.
+    description: >-
+      The path to the package. Only available when target is pkgbuild.
 
 runs:
   using: docker
