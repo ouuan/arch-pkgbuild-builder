@@ -27,9 +27,9 @@ inputs:
     required: false
 
 outputs:
-  pkgpath:
+  pkgfile:
     description: >-
-      The path to the package. Only available when target is pkgbuild.
+      The file name of the package. Only available when target is pkgbuild.
 
 runs:
   using: docker

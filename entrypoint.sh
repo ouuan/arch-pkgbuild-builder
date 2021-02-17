@@ -70,13 +70,13 @@ pkgbuild)
     # shellcheck disable=SC1091
     source /etc/makepkg.conf # get PKGEXT
 
-    paths=("${pkgname}-${pkgver}-${pkgrel}-"*"${PKGEXT}")
-    pkgpath="${paths[0]}"
-    echo "::set-output name=pkgpath::${pkgpath}"
+    files=("${pkgname}-${pkgver}-${pkgrel}-"*"${PKGEXT}")
+    pkgfile="${files[0]}"
+    echo "::set-output name=pkgfile::${pkgfile}"
 
-    namcap "${pkgpath}"
-    pacman -Qip "${pkgpath}"
-    pacman -Qlp "${pkgpath}"
+    namcap "${pkgfile}"
+    pacman -Qip "${pkgfile}"
+    pacman -Qlp "${pkgfile}"
     ;;
 run)
     install_deps
