@@ -12,10 +12,10 @@ jobs:
     runs-on: ubuntu-latest
     name: Validate a Pull Request
     steps:
-      - uses: actions/checkout@v1
+      - uses: actions/checkout@v2
 
       - name: Run yamllint
-        uses: ibiqlik/action-yamllint@v1.0.0
+        uses: ibiqlik/action-yamllint@v3.0.0
 
       - name: Run ShellCheck
         uses: ludeeus/action-shellcheck@master
