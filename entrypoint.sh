@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # fail whole script if any command fails
-set -e
+set -eo pipefail
 
 DEBUG=$4
 
@@ -49,24 +49,15 @@ sudo pacman -Syu
 
 cd "$pkgbuild_dir"
 
-pkgname="$(basename "$pkgbuild_dir")" # keep quotes in case someone passes in a directory path with whitespaces...
-
-install_deps() {
-    # install make and regular package dependencies
-    grep -E 'depends|makedepends' PKGBUILD |
-        sed -e 's/.*depends=//' -e 's/ /\n/g' |
-        tr -d "'" | tr -d "(" | tr -d ")" |
-        xargs yay -S --noconfirm
-}
+# shellcheck disable=SC1091
+source PKGBUILD
 
 case $target in
 pkgbuild)
     namcap PKGBUILD
-    install_deps
+    yay -Syu --noconfirm "${depends[@]}" "${makedepends[@]}"
     makepkg --syncdeps --noconfirm
 
-    # shellcheck disable=SC1091
-    source PKGBUILD # get pkgver and pkgrel
     # shellcheck disable=SC1091
     source /etc/makepkg.conf # get PKGEXT
 
@@ -79,7 +70,7 @@ pkgbuild)
     pacman -Qlp "${pkgfile}"
     ;;
 run)
-    install_deps
+    yay -Syu --noconfirm "${depends[@]}" "${makedepends[@]}"
     makepkg --syncdeps --noconfirm --install
     eval "$command"
     ;;
